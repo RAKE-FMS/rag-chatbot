@@ -86,6 +86,11 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
       }
     }
     siteConfig: {
+      cors: {
+        allowedOrigins: [
+          'https://portal.azure.com'
+        ]
+      }
       appSettings: [
         { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${chatApiSt.name};AccountKey=${chatApiSt.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
         { name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING', value: 'DefaultEndpointsProtocol=https;AccountName=${chatApiSt.name};AccountKey=${chatApiSt.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
