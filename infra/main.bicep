@@ -1,37 +1,44 @@
-@description('プロジェクトのベース名')
+@description('Project name')
 param projectName string = 'rcb'
 
-@description('デプロイ環境 (dev, prd)')
+@description('Deployment environment (dev, prd)')
 @allowed(['dev', 'prd'])
 param env string
 
-@description('リソースの配備場所')
+@description('Resource deployment location')
 param location string = 'japaneast'
 var locationCode = 'jpe'
 
 var uniqueId = uniqueString(resourceGroup().id)
 var shortUniqueId = take(uniqueId, 5)
 
-// --- 名称の定義 (リージョン名入り) ---
-var logName = 'log-${projectName}-${env}-${locationCode}'
-var insName = 'ins-${projectName}-${env}-${locationCode}'
+// common naming
+var lawName = 'law-${projectName}-${env}-${locationCode}'
+var docsStName = take('st${projectName}docs${env}${locationCode}${shortUniqueId}', 24)
 
-// ストレージは最大24文字。記号不可。
-var stSysName = take('st${projectName}sys${env}${locationCode}${shortUniqueId}', 24)
-var stDataName = take('st${projectName}data${env}${locationCode}${shortUniqueId}', 24)
+// chat-api naming
+var chatApiAppiName = 'appi-${projectName}-chat-api-${env}-${locationCode}'
+var chatApiStName = take('st${projectName}capi${env}${locationCode}${shortUniqueId}', 24)
+var chatApiAspName = 'asp-${projectName}-chat-api-${env}-${locationCode}'
+var chatApiFuncName = 'func-${projectName}-chat-api-${env}-${locationCode}'
 
-var apiPlanName = 'plan-${projectName}-api-${env}-${locationCode}'
-var apiAppName = 'func-${projectName}-api-${env}-${locationCode}'
-
-// --- [監視] ログ基盤 ---
+// common resources
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: logName
+  name: lawName
   location: location
   properties: { sku: { name: 'PerGB2018' } }
 }
 
-resource appInsights 'Microsoft.insights/components@2020-02-02' = {
-  name: insName
+resource docsSt 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: docsStName
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+}
+
+// chat-api resources
+resource chatApiAppi 'Microsoft.insights/components@2020-02-02' = {
+  name: chatApiAppiName
   location: location
   kind: 'web'
   properties: {
@@ -40,38 +47,27 @@ resource appInsights 'Microsoft.insights/components@2020-02-02' = {
   }
 }
 
-// --- [ストレージ] システム用 ---
-resource storageSys 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: stSysName
+resource chatApiSt 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: chatApiStName
   location: location
   sku: { name: 'Standard_LRS' }
   kind: 'StorageV2'
 }
 
-// --- [ストレージ] データ用 ---
-resource storageData 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: stDataName
-  location: location
-  sku: { name: 'Standard_LRS' }
-  kind: 'StorageV2'
-}
-
-// --- [計算資源] Flex Consumption プラン ---
-resource hostingPlan 'Microsoft.Web/serverfarms@2024-11-01' = {
-  name: apiPlanName
+resource chatApiAsp 'Microsoft.Web/serverfarms@2024-11-01' = {
+  name: chatApiAspName
   location: location
   kind: 'functionapp'
   sku: { name: 'FC1', tier: 'FlexConsumption' }
   properties: { reserved: true }
 }
 
-// --- [本体] Function App (API) ---
-resource apiApp 'Microsoft.Web/sites@2024-11-01' = {
-  name: apiAppName
+resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
+  name: chatApiFuncName
   location: location
   kind: 'functionapp,linux'
   properties: {
-    serverFarmId: hostingPlan.id
+    serverFarmId: chatApiAsp.id
     functionAppConfig: {
       runtime: { name: 'node', version: '22' }
       scaleAndConcurrency: {
@@ -81,7 +77,7 @@ resource apiApp 'Microsoft.Web/sites@2024-11-01' = {
       deployment: {
         storage: {
           type: 'blobcontainer'
-          value: '${storageSys.properties.primaryEndpoints.blob}api-package'
+          value: '${chatApiSt.properties.primaryEndpoints.blob}api-package'
           authentication: { 
             type: 'StorageAccountConnectionString' 
             storageAccountConnectionStringName: 'DEPLOYMENT_STORAGE_CONNECTION_STRING' 
@@ -91,19 +87,20 @@ resource apiApp 'Microsoft.Web/sites@2024-11-01' = {
     }
     siteConfig: {
       appSettings: [
-        { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${storageSys.name};AccountKey=${storageSys.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
-        { name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING', value: 'DefaultEndpointsProtocol=https;AccountName=${storageSys.name};AccountKey=${storageSys.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
-        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
-        { name: 'DATA_STORAGE_CONNECTION_STRING', value: 'DefaultEndpointsProtocol=https;AccountName=${storageData.name};AccountKey=${storageData.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${chatApiSt.name};AccountKey=${chatApiSt.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        { name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING', value: 'DefaultEndpointsProtocol=https;AccountName=${chatApiSt.name};AccountKey=${chatApiSt.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: chatApiAppi.properties.ConnectionString }
+        { name: 'DATA_STORAGE_CONNECTION_STRING', value: 'DefaultEndpointsProtocol=https;AccountName=${docsSt.name};AccountKey=${docsSt.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
       ]
     }
   }
 }
 
-// --- コンテナ作成 ---
 resource containerSys 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  name: '${storageSys.name}/default/api-package'
+  name: '${chatApiSt.name}/default/api-package'
 }
 resource containerData 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  name: '${storageData.name}/default/documents'
+  name: '${docsSt.name}/default/documents'
 }
+
+output chatApiFuncName string = chatApi.name

@@ -27,7 +27,7 @@ az deployment group create \
 ### アプリケーションのデプロイ
 - アプリケーションディレクトリへ移動
 ```bash
-cd apps/chat-app
+cd apps/chat-api
 ```
 - 依存関係のインストール
 ```bash
