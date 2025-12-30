@@ -98,6 +98,10 @@ resource embedding 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01'
       version: '1'
     }
   }
+  sku: {
+    name: 'Standard'
+    capacity: 10
+  }
 }
 
 // chat-api resources
