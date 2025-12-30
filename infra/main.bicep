@@ -94,6 +94,10 @@ resource embedding 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01'
       version: '1'
     }
   }
+  sku: {
+    name: 'GlobalStandard'
+    capacity: 10
+  }
 }
 
 // chat-api resources
