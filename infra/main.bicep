@@ -200,3 +200,4 @@ output chatApiFuncName string = chatApi.name
 output searchServiceName string = search.name
 output openaiAccountName string = openai.name
 output embeddingDeploymentName string = embedding.name
+output docsStorageAccountName string = docsSt.name
