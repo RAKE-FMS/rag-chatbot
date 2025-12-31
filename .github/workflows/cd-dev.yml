@@ -98,7 +98,6 @@ jobs:
     name: "chat-api: deploy"
     needs:
       - infra-deploy
-      - search-apply
     runs-on: ubuntu-latest
     environment: dev
     steps:

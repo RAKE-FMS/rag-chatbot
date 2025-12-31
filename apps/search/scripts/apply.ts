@@ -107,6 +107,22 @@ class SearchDatasourceClient {
     }
 }
 
+class SearchSkillsetClient {
+    private readonly rest: SearchRestClient;
+
+    public constructor(rest: SearchRestClient) {
+        this.rest = rest;
+    }
+
+    public async put(skillsetDefinition: any): Promise<void> {
+        const name = skillsetDefinition?.name;
+        if (!name || typeof name !== "string") {
+            throw new Error('Skillset definition is missing "name"');
+        }
+        await this.rest.put("skillsets", name, skillsetDefinition);
+    }
+}
+
 async function applyIndexes(
     dirPath: string,
     indexClient: SearchIndexClient,
@@ -161,6 +177,33 @@ async function applyDatasources(
     return count;
 }
 
+async function applySkillsets(
+    dirPath: string,
+    skillsetClient: SearchSkillsetClient,
+    replacer: Replacer
+): Promise<number> {
+    const files = await listJsonFiles(dirPath);
+
+    if (files.length === 0) {
+        console.log(`[search] skillsets: skip (no files in ${dirPath})`);
+        return 0;
+    }
+
+    let count = 0;
+    for (const filePath of files) {
+        const raw = await readFile(filePath, "utf-8");
+        const replaced = replacer.replace(raw);
+        const def = JSON.parse(replaced);
+
+        await skillsetClient.put(def);
+
+        console.log(`[search] skillsets: applied ${def.name} (${path.basename(filePath)})`);
+        count += 1;
+    }
+
+    return count;
+}
+
 async function main(): Promise<void> {
     const searchEndpoint = requireEnv("AZURE_SEARCH_SERVICE_ENDPOINT");
     const searchAdminKey = requireEnv("AZURE_SEARCH_ADMIN_KEY");
@@ -168,6 +211,7 @@ async function main(): Promise<void> {
 
     const schemasDir = path.resolve(process.cwd(), "schemas");
     const datasourcesDir = path.join(schemasDir, "datasources");
+    const skillsetsDir = path.join(schemasDir, "skillsets");
     const indexesDir = path.join(schemasDir, "indexes");
 
     const replacer = new Replacer({
@@ -181,11 +225,15 @@ async function main(): Promise<void> {
 
     const datasourceClient = new SearchDatasourceClient(rest);
     const indexClient = new SearchIndexClient(rest);
+    const skillsetClient = new SearchSkillsetClient(rest);
 
     const appliedDatasources = await applyDatasources(datasourcesDir, datasourceClient, replacer);
     const appliedIndexes = await applyIndexes(indexesDir, indexClient, replacer);
+    const appliedSkillsets = await applySkillsets(skillsetsDir, skillsetClient, replacer);
 
-    console.log(`[search] done. datasources=${appliedDatasources}, indexes=${appliedIndexes}`);
+    console.log(
+        `[search] done. datasources=${appliedDatasources}, indexes=${appliedIndexes}, skillsets=${appliedSkillsets}`
+    );
 }
 
 main().catch((err) => {
