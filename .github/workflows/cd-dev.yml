@@ -21,6 +21,7 @@ jobs:
       SEARCH_SERVICE_NAME: ${{ steps.deploy.outputs.searchServiceName }}
       OPENAI_ACCOUNT_NAME: ${{ steps.deploy.outputs.openaiAccountName }}
       EMBEDDING_DEPLOYMENT_NAME: ${{ steps.deploy.outputs.embeddingDeploymentName }}
+      DOCS_STORAGE_ACCOUNT_NAME: ${{ steps.deploy.outputs.docsStorageAccountName }}
     steps:
       - name: "checkout"
         uses: actions/checkout@v4
@@ -41,7 +42,7 @@ jobs:
           parameters: infra/params/dev.bicepparam
 
   search-apply:
-    name: "search: apply index"
+    name: "search: apply"
     needs: infra-deploy
     runs-on: ubuntu-latest
     environment: dev
@@ -67,12 +68,13 @@ jobs:
         run: |
           npm ci --prefix apps/search
 
-      - name: "apply index"
+      - name: "apply search schemas"
         env:
           RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
           SEARCH_SERVICE_NAME: ${{ needs.infra-deploy.outputs.SEARCH_SERVICE_NAME }}
           OPENAI_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.OPENAI_ACCOUNT_NAME }}
           EMBEDDING_DEPLOYMENT_NAME: ${{ needs.infra-deploy.outputs.EMBEDDING_DEPLOYMENT_NAME }}
+          DOCS_STORAGE_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.DOCS_STORAGE_ACCOUNT_NAME }}
         run: |
           set -euo pipefail
 
@@ -80,12 +82,15 @@ jobs:
           AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${RESOURCE_GROUP_NAME}" --service-name "${SEARCH_SERVICE_NAME}" --query primaryKey -o tsv)"
           AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query properties.endpoint -o tsv)"
           AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query key1 -o tsv)"
+          DOCS_STORAGE_KEY="$(az storage account keys list -g "${RESOURCE_GROUP_NAME}" -n "${DOCS_STORAGE_ACCOUNT_NAME}" --query '[0].value' -o tsv)"
+          AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${DOCS_STORAGE_ACCOUNT_NAME};AccountKey=${DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
 
           export AZURE_SEARCH_SERVICE_ENDPOINT
           export AZURE_SEARCH_ADMIN_KEY
           export AZURE_OPENAI_ENDPOINT
           export AZURE_OPENAI_API_KEY
           export AZURE_OPENAI_EMBEDDING_DEPLOYMENT="${EMBEDDING_DEPLOYMENT_NAME}"
+          export AZURE_DOCS_STORAGE_CONNECTION_STRING
 
           npm run apply --prefix apps/search
 
