@@ -39,7 +39,7 @@
             "retrievable": false,
             "stored": true,
             "dimensions": 1536,
-            "vectorSearchProfileName": "vector-profile"
+            "vectorSearchProfile": "vector-profile"
         }
     ],
     "corsOptions": {
@@ -64,8 +64,8 @@
         "profiles": [
             {
                 "name": "vector-profile",
-                "algorithmConfigurationName": "vector-config",
-                "vectorizerName": "openai-vectorizer"
+                "algorithm": "vector-config",
+                "vectorizer": "openai-vectorizer"
             }
         ],
         "vectorizers": [
