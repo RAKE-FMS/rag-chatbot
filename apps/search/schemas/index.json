@@ -1,0 +1,84 @@
+{
+    "name": "rag-index",
+    "fields": [
+        {
+            "name": "id",
+            "type": "Edm.String",
+            "key": true,
+            "searchable": true,
+            "retrievable": true,
+            "stored": true,
+            "analyzer": "keyword"
+        },
+        {
+            "name": "content",
+            "type": "Edm.String",
+            "searchable": true,
+            "retrievable": true,
+            "stored": true,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "title",
+            "type": "Edm.String",
+            "searchable": true,
+            "retrievable": true,
+            "stored": true
+        },
+        {
+            "name": "parentId",
+            "type": "Edm.String",
+            "filterable": true,
+            "retrievable": true,
+            "stored": true
+        },
+        {
+            "name": "contentVector",
+            "type": "Collection(Edm.Single)",
+            "searchable": true,
+            "retrievable": false,
+            "stored": true,
+            "dimensions": 1536,
+            "vectorSearchProfile": "vector-profile"
+        }
+    ],
+    "corsOptions": {
+        "allowedOrigins": [
+            "*"
+        ],
+        "maxAgeInSeconds": 300
+    },
+    "vectorSearch": {
+        "algorithms": [
+            {
+                "name": "vector-config",
+                "kind": "hnsw",
+                "hnswParameters": {
+                    "metric": "cosine",
+                    "m": 4,
+                    "efConstruction": 400,
+                    "efSearch": 500
+                }
+            }
+        ],
+        "profiles": [
+            {
+                "name": "vector-profile",
+                "algorithm": "vector-config",
+                "vectorizer": "openai-vectorizer"
+            }
+        ],
+        "vectorizers": [
+            {
+                "name": "openai-vectorizer",
+                "kind": "azureOpenAI",
+                "azureOpenAIParameters": {
+                    "resourceUri": "__AOAI_ENDPOINT__",
+                    "deploymentId": "__EMBEDDING_DEPLOYMENT__",
+                    "apiKey": "__AOAI_KEY__",
+                    "modelName": "text-embedding-3-small"
+                }
+            }
+        ]
+    }
+}

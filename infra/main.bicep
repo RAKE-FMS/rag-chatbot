@@ -197,3 +197,6 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
 }
 
 output chatApiFuncName string = chatApi.name
+output searchServiceName string = search.name
+output openaiAccountName string = openai.name
+output embeddingDeploymentName string = embedding.name

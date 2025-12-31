@@ -1,0 +1,16 @@
+{
+    "name": "search",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "apply": "tsx scripts/apply.ts"
+    },
+    "dependencies": {
+        "@azure/search-documents": "^12.1.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.x",
+        "tsx": "^4.0.0",
+        "typescript": "^5.5.0"
+    }
+}

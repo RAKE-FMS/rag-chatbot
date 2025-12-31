@@ -18,15 +18,20 @@ jobs:
     environment: dev
     outputs:
       CHAT_API_FUNC_NAME: ${{ steps.deploy.outputs.chatApiFuncName }}
+      SEARCH_SERVICE_NAME: ${{ steps.deploy.outputs.searchServiceName }}
+      OPENAI_ACCOUNT_NAME: ${{ steps.deploy.outputs.openaiAccountName }}
+      EMBEDDING_DEPLOYMENT_NAME: ${{ steps.deploy.outputs.embeddingDeploymentName }}
     steps:
       - name: "checkout"
         uses: actions/checkout@v4
+
       - name: "login azure"
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: "deploy bicep"
         id: deploy
         uses: azure/arm-deploy@v2
@@ -35,31 +40,86 @@ jobs:
           template: infra/main.bicep
           parameters: infra/params/dev.bicepparam
 
-  chat-api-deploy:
-    name: "chat-api: deploy"
+  search-apply:
+    name: "search: apply index"
     needs: infra-deploy
     runs-on: ubuntu-latest
     environment: dev
     steps:
       - name: "checkout"
         uses: actions/checkout@v4
+
       - name: "login azure"
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: "setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'apps/search/package-lock.json'
+
+      - name: "install search scripts"
+        run: |
+          npm ci --prefix apps/search
+
+      - name: "apply index"
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
+          SEARCH_SERVICE_NAME: ${{ needs.infra-deploy.outputs.SEARCH_SERVICE_NAME }}
+          OPENAI_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.OPENAI_ACCOUNT_NAME }}
+          EMBEDDING_DEPLOYMENT_NAME: ${{ needs.infra-deploy.outputs.EMBEDDING_DEPLOYMENT_NAME }}
+        run: |
+          set -euo pipefail
+
+          AZURE_SEARCH_SERVICE_ENDPOINT="https://${SEARCH_SERVICE_NAME}.search.windows.net"
+          AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${RESOURCE_GROUP_NAME}" --service-name "${SEARCH_SERVICE_NAME}" --query primaryKey -o tsv)"
+          AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query properties.endpoint -o tsv)"
+          AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query key1 -o tsv)"
+
+          export AZURE_SEARCH_SERVICE_ENDPOINT
+          export AZURE_SEARCH_ADMIN_KEY
+          export AZURE_OPENAI_ENDPOINT
+          export AZURE_OPENAI_API_KEY
+          export AZURE_OPENAI_EMBEDDING_DEPLOYMENT="${EMBEDDING_DEPLOYMENT_NAME}"
+
+          npm run apply --prefix apps/search
+
+  chat-api-deploy:
+    name: "chat-api: deploy"
+    needs:
+      - infra-deploy
+      - search-apply
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: "checkout"
+        uses: actions/checkout@v4
+
+      - name: "login azure"
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: "setup node"
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'apps/chat-api/package-lock.json'
+
       - name: "install and build"
         run: |
           cd apps/chat-api
           npm install
           npm run build --if-present
+
       - name: "deploy function"
         uses: azure/functions-action@v1
         with:
