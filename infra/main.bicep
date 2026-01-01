@@ -36,6 +36,9 @@ var chatApiContainerName = 'api-package'
 var chatApiAspName = 'asp-${organizationName}-${projectName}-chat-api-${env}-${locationCode}'
 var chatApiFuncName = 'func-${organizationName}-${projectName}-chat-api-${env}-${locationCode}'
 
+// chat-web
+var chatWebName = 'stapp-${organizationName}-${projectName}-chat-web-${env}-${locationCode}'
+
 // ----- resources -----
 // logging
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
@@ -195,8 +198,20 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
   }
 }
 
+// chat-web
+resource chatWeb 'Microsoft.Web/staticSites@2022-03-01' = {
+  name: chatWebName
+  location: 'eastasia'
+  sku: {
+    name: 'Free'
+    tier: 'Free'
+  }
+}
+
+// ----- outputs -----
 output chatApiFuncName string = chatApi.name
 output searchServiceName string = search.name
 output openaiAccountName string = openai.name
 output textEmbedding3SmallDeploymentName string = textEmbedding3Small.name
 output docsStorageAccountName string = docsSt.name
+output chatWebDefaultHostname string = chatWeb.properties.defaultHostname
