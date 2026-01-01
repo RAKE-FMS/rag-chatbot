@@ -82,7 +82,7 @@ resource openai 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   }
 }
 
-resource gpt41mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+resource gpt41Mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: openai
   name: 'gpt-4.1-mini'
   properties: {
@@ -98,11 +98,11 @@ resource gpt41mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01'
   }
 }
 
-resource embedding 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+resource textEmbedding3Small 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: openai
   name: 'text-embedding-3-small'
   dependsOn: [
-    gpt41mini
+    gpt41Mini
   ]
   properties: {
     model: {
@@ -189,8 +189,7 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
         { name: 'AZURE_SEARCH_ADMIN_KEY', value: search.listAdminKeys().primaryKey }
         { name: 'AZURE_OPENAI_ENDPOINT', value: openai.properties.endpoint }
         { name: 'AZURE_OPENAI_API_KEY', value: openai.listKeys().key1 }
-        { name: 'AZURE_OPENAI_CHAT_DEPLOYMENT', value: gpt41mini.name }
-        { name: 'AZURE_OPENAI_EMBEDDING_DEPLOYMENT', value: embedding.name }
+        { name: 'AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT', value: gpt41Mini.name }
       ]
     }
   }
@@ -199,5 +198,5 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
 output chatApiFuncName string = chatApi.name
 output searchServiceName string = search.name
 output openaiAccountName string = openai.name
-output embeddingDeploymentName string = embedding.name
+output textEmbedding3SmallDeploymentName string = textEmbedding3Small.name
 output docsStorageAccountName string = docsSt.name

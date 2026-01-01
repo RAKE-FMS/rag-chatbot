@@ -13,7 +13,7 @@ const EnvSchema = z.object({
     // Azure OpenAI
     AZURE_OPENAI_ENDPOINT: z.url().transform(normalizeEndpoint),
     AZURE_OPENAI_API_KEY: z.string().min(1),
-    AZURE_OPENAI_CHAT_DEPLOYMENT: z.string().min(1),
+    AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT: z.string().min(1),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -24,5 +24,5 @@ export const env: Env = EnvSchema.parse({
 
     AZURE_OPENAI_ENDPOINT: process.env.AZURE_OPENAI_ENDPOINT,
     AZURE_OPENAI_API_KEY: process.env.AZURE_OPENAI_API_KEY,
-    AZURE_OPENAI_CHAT_DEPLOYMENT: process.env.AZURE_OPENAI_CHAT_DEPLOYMENT,
+    AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT: process.env.AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT,
 });

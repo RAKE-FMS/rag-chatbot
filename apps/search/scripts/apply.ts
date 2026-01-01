@@ -56,21 +56,29 @@ class SearchRestClient {
         this.apiKey = apiKey;
     }
 
-    public async put(collection: string, name: string, body: unknown): Promise<void> {
-        const url = `${this.endpoint}/${collection}('${encodeURIComponent(name)}')?api-version=${encodeURIComponent(this.apiVersion)}`;
+    public async put(
+        collection: string,
+        name: string,
+        body: unknown
+    ): Promise<void> {
+        const url = `${this.endpoint}/${collection}('${encodeURIComponent(
+            name
+        )}')?api-version=${encodeURIComponent(this.apiVersion)}`;
 
         const res = await fetch(url, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "api-key": this.apiKey
+                "api-key": this.apiKey,
             },
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
         });
 
         if (!res.ok) {
             const text = await res.text();
-            throw new Error(`PUT failed: ${url}\nstatus=${res.status} ${res.statusText}\n${text}`);
+            throw new Error(
+                `PUT failed: ${url}\nstatus=${res.status} ${res.statusText}\n${text}`
+            );
         }
     }
 }
@@ -159,7 +167,9 @@ async function applyIndexes(
 
         await indexClient.put(def);
 
-        console.log(`[search] indexes: applied ${def.name} (${path.basename(filePath)})`);
+        console.log(
+            `[search] indexes: applied ${def.name} (${path.basename(filePath)})`
+        );
         count += 1;
     }
 
@@ -186,7 +196,11 @@ async function applyDatasources(
 
         await datasourceClient.put(def);
 
-        console.log(`[search] datasources: applied ${def.name} (${path.basename(filePath)})`);
+        console.log(
+            `[search] datasources: applied ${def.name} (${path.basename(
+                filePath
+            )})`
+        );
         count += 1;
     }
 
@@ -213,7 +227,11 @@ async function applySkillsets(
 
         await skillsetClient.put(def);
 
-        console.log(`[search] skillsets: applied ${def.name} (${path.basename(filePath)})`);
+        console.log(
+            `[search] skillsets: applied ${def.name} (${path.basename(
+                filePath
+            )})`
+        );
         count += 1;
     }
 
@@ -240,7 +258,11 @@ async function applyIndexers(
 
         await indexerClient.put(def);
 
-        console.log(`[search] indexers: applied ${def.name} (${path.basename(filePath)})`);
+        console.log(
+            `[search] indexers: applied ${def.name} (${path.basename(
+                filePath
+            )})`
+        );
         count += 1;
     }
 
@@ -259,23 +281,49 @@ async function main(): Promise<void> {
     const indexersDir = path.join(schemasDir, "indexers");
 
     const replacer = new Replacer({
-        "__AOAI_ENDPOINT__": trimTrailingSlash(requireEnv("AZURE_OPENAI_ENDPOINT")),
-        "__AOAI_KEY__": requireEnv("AZURE_OPENAI_API_KEY"),
-        "__AOAI_EMBEDDING_DEPLOYMENT__": requireEnv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT"),
-        "__DOCS_STORAGE_CONNECTION_STRING__": requireEnv("AZURE_DOCS_STORAGE_CONNECTION_STRING")
+        __AOAI_ENDPOINT__: trimTrailingSlash(
+            requireEnv("AZURE_OPENAI_ENDPOINT")
+        ),
+        __AOAI_KEY__: requireEnv("AZURE_OPENAI_API_KEY"),
+        __AOAI_EMBEDDING_DEPLOYMENT__: requireEnv(
+            "AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT"
+        ),
+        __DOCS_STORAGE_CONNECTION_STRING__: requireEnv(
+            "AZURE_DOCS_STORAGE_CONNECTION_STRING"
+        ),
     });
 
-    const rest = new SearchRestClient(searchEndpoint, apiVersion, searchAdminKey);
+    const rest = new SearchRestClient(
+        searchEndpoint,
+        apiVersion,
+        searchAdminKey
+    );
 
     const datasourceClient = new SearchDatasourceClient(rest);
     const indexClient = new SearchIndexClient(rest);
     const skillsetClient = new SearchSkillsetClient(rest);
     const indexerClient = new SearchIndexerClient(rest);
 
-    const appliedDatasources = await applyDatasources(datasourcesDir, datasourceClient, replacer);
-    const appliedIndexes = await applyIndexes(indexesDir, indexClient, replacer);
-    const appliedSkillsets = await applySkillsets(skillsetsDir, skillsetClient, replacer);
-    const appliedIndexers = await applyIndexers(indexersDir, indexerClient, replacer);
+    const appliedDatasources = await applyDatasources(
+        datasourcesDir,
+        datasourceClient,
+        replacer
+    );
+    const appliedIndexes = await applyIndexes(
+        indexesDir,
+        indexClient,
+        replacer
+    );
+    const appliedSkillsets = await applySkillsets(
+        skillsetsDir,
+        skillsetClient,
+        replacer
+    );
+    const appliedIndexers = await applyIndexers(
+        indexersDir,
+        indexerClient,
+        replacer
+    );
 
     console.log(
         `[search] done. datasources=${appliedDatasources}, indexes=${appliedIndexes}, skillsets=${appliedSkillsets}, indexers=${appliedIndexers}`

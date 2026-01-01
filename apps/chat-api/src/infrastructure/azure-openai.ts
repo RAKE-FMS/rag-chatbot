@@ -17,5 +17,5 @@ export function getOpenAIClient(): OpenAI {
 }
 
 export const modelRegistry = {
-    gpt41mini: env.AZURE_OPENAI_CHAT_DEPLOYMENT,
+    gpt41mini: env.AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT,
 };

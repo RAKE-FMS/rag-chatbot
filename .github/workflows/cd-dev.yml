@@ -1,131 +1,131 @@
 name: cd-dev
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'infra/**'
-      - 'apps/**'
+    push:
+        branches: [main]
+        paths:
+            - "infra/**"
+            - "apps/**"
 
 permissions:
-  id-token: write
-  contents: read
+    id-token: write
+    contents: read
 
 jobs:
-  infra-deploy:
-    name: "infra: deploy"
-    runs-on: ubuntu-latest
-    environment: dev
-    outputs:
-      CHAT_API_FUNC_NAME: ${{ steps.deploy.outputs.chatApiFuncName }}
-      SEARCH_SERVICE_NAME: ${{ steps.deploy.outputs.searchServiceName }}
-      OPENAI_ACCOUNT_NAME: ${{ steps.deploy.outputs.openaiAccountName }}
-      EMBEDDING_DEPLOYMENT_NAME: ${{ steps.deploy.outputs.embeddingDeploymentName }}
-      DOCS_STORAGE_ACCOUNT_NAME: ${{ steps.deploy.outputs.docsStorageAccountName }}
-    steps:
-      - name: "checkout"
-        uses: actions/checkout@v4
+    infra-deploy:
+        name: "infra: deploy"
+        runs-on: ubuntu-latest
+        environment: dev
+        outputs:
+            CHAT_API_FUNC_NAME: ${{ steps.deploy.outputs.chatApiFuncName }}
+            SEARCH_SERVICE_NAME: ${{ steps.deploy.outputs.searchServiceName }}
+            OPENAI_ACCOUNT_NAME: ${{ steps.deploy.outputs.openaiAccountName }}
+            TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME: ${{ steps.deploy.outputs.textEmbedding3SmallDeploymentName }}
+            DOCS_STORAGE_ACCOUNT_NAME: ${{ steps.deploy.outputs.docsStorageAccountName }}
+        steps:
+            - name: "checkout"
+              uses: actions/checkout@v4
 
-      - name: "login azure"
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            - name: "login azure"
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: "deploy bicep"
-        id: deploy
-        uses: azure/arm-deploy@v2
-        with:
-          resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
-          template: infra/main.bicep
-          parameters: infra/params/dev.bicepparam
+            - name: "deploy bicep"
+              id: deploy
+              uses: azure/arm-deploy@v2
+              with:
+                  resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
+                  template: infra/main.bicep
+                  parameters: infra/params/dev.bicepparam
 
-  search-apply:
-    name: "search: apply"
-    needs: infra-deploy
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - name: "checkout"
-        uses: actions/checkout@v4
+    search-apply:
+        name: "search: apply"
+        needs: infra-deploy
+        runs-on: ubuntu-latest
+        environment: dev
+        steps:
+            - name: "checkout"
+              uses: actions/checkout@v4
 
-      - name: "login azure"
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            - name: "login azure"
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: "setup node"
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: 'apps/search/package-lock.json'
+            - name: "setup node"
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  cache: "npm"
+                  cache-dependency-path: "apps/search/package-lock.json"
 
-      - name: "install search scripts"
-        run: |
-          npm ci --prefix apps/search
+            - name: "install search scripts"
+              run: |
+                  npm ci --prefix apps/search
 
-      - name: "apply search schemas"
-        env:
-          RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
-          SEARCH_SERVICE_NAME: ${{ needs.infra-deploy.outputs.SEARCH_SERVICE_NAME }}
-          OPENAI_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.OPENAI_ACCOUNT_NAME }}
-          EMBEDDING_DEPLOYMENT_NAME: ${{ needs.infra-deploy.outputs.EMBEDDING_DEPLOYMENT_NAME }}
-          DOCS_STORAGE_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.DOCS_STORAGE_ACCOUNT_NAME }}
-        run: |
-          set -euo pipefail
+            - name: "apply search schemas"
+              env:
+                  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
+                  SEARCH_SERVICE_NAME: ${{ needs.infra-deploy.outputs.SEARCH_SERVICE_NAME }}
+                  OPENAI_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.OPENAI_ACCOUNT_NAME }}
+                  TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME: ${{ needs.infra-deploy.outputs.TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME }}
+                  DOCS_STORAGE_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.DOCS_STORAGE_ACCOUNT_NAME }}
+              run: |
+                  set -euo pipefail
 
-          AZURE_SEARCH_SERVICE_ENDPOINT="https://${SEARCH_SERVICE_NAME}.search.windows.net"
-          AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${RESOURCE_GROUP_NAME}" --service-name "${SEARCH_SERVICE_NAME}" --query primaryKey -o tsv)"
-          AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query properties.endpoint -o tsv)"
-          AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query key1 -o tsv)"
-          DOCS_STORAGE_KEY="$(az storage account keys list -g "${RESOURCE_GROUP_NAME}" -n "${DOCS_STORAGE_ACCOUNT_NAME}" --query '[0].value' -o tsv)"
-          AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${DOCS_STORAGE_ACCOUNT_NAME};AccountKey=${DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
+                  AZURE_SEARCH_SERVICE_ENDPOINT="https://${SEARCH_SERVICE_NAME}.search.windows.net"
+                  AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${RESOURCE_GROUP_NAME}" --service-name "${SEARCH_SERVICE_NAME}" --query primaryKey -o tsv)"
+                  AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query properties.endpoint -o tsv)"
+                  AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query key1 -o tsv)"
+                  DOCS_STORAGE_KEY="$(az storage account keys list -g "${RESOURCE_GROUP_NAME}" -n "${DOCS_STORAGE_ACCOUNT_NAME}" --query '[0].value' -o tsv)"
+                  AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${DOCS_STORAGE_ACCOUNT_NAME};AccountKey=${DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
 
-          export AZURE_SEARCH_SERVICE_ENDPOINT
-          export AZURE_SEARCH_ADMIN_KEY
-          export AZURE_OPENAI_ENDPOINT
-          export AZURE_OPENAI_API_KEY
-          export AZURE_OPENAI_EMBEDDING_DEPLOYMENT="${EMBEDDING_DEPLOYMENT_NAME}"
-          export AZURE_DOCS_STORAGE_CONNECTION_STRING
+                  export AZURE_SEARCH_SERVICE_ENDPOINT
+                  export AZURE_SEARCH_ADMIN_KEY
+                  export AZURE_OPENAI_ENDPOINT
+                  export AZURE_OPENAI_API_KEY
+                  export AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT="${TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME}"
+                  export AZURE_DOCS_STORAGE_CONNECTION_STRING
 
-          npm run apply --prefix apps/search
+                  npm run apply --prefix apps/search
 
-  chat-api-deploy:
-    name: "chat-api: deploy"
-    needs:
-      - infra-deploy
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - name: "checkout"
-        uses: actions/checkout@v4
+    chat-api-deploy:
+        name: "chat-api: deploy"
+        needs:
+            - infra-deploy
+        runs-on: ubuntu-latest
+        environment: dev
+        steps:
+            - name: "checkout"
+              uses: actions/checkout@v4
 
-      - name: "login azure"
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            - name: "login azure"
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: "setup node"
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: 'apps/chat-api/package-lock.json'
+            - name: "setup node"
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  cache: "npm"
+                  cache-dependency-path: "apps/chat-api/package-lock.json"
 
-      - name: "install and build"
-        run: |
-          cd apps/chat-api
-          npm install
-          npm run build --if-present
+            - name: "install and build"
+              run: |
+                  cd apps/chat-api
+                  npm install
+                  npm run build --if-present
 
-      - name: "deploy function"
-        uses: azure/functions-action@v1
-        with:
-          app-name: ${{ needs.infra-deploy.outputs.CHAT_API_FUNC_NAME }}
-          package: 'apps/chat-api'
+            - name: "deploy function"
+              uses: azure/functions-action@v1
+              with:
+                  app-name: ${{ needs.infra-deploy.outputs.CHAT_API_FUNC_NAME }}
+                  package: "apps/chat-api"
