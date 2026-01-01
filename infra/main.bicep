@@ -206,6 +206,10 @@ resource chatWeb 'Microsoft.Web/staticSites@2024-11-01' = {
     name: 'Free'
     tier: 'Free'
   }
+  properties: {
+    stagingEnvironmentPolicy: 'Enabled'
+    allowConfigFileUpdates: true
+  }
 }
 
 // ----- outputs -----
