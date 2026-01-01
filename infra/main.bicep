@@ -199,7 +199,7 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
 }
 
 // chat-web
-resource chatWeb 'Microsoft.Web/staticSites@2022-03-01' = {
+resource chatWeb 'Microsoft.Web/staticSites@2024-11-01' = {
   name: chatWebName
   location: 'eastasia'
   sku: {
@@ -214,4 +214,3 @@ output searchServiceName string = search.name
 output openaiAccountName string = openai.name
 output textEmbedding3SmallDeploymentName string = textEmbedding3Small.name
 output docsStorageAccountName string = docsSt.name
-output chatWebDefaultHostname string = chatWeb.properties.defaultHostname
