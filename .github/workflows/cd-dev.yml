@@ -4,6 +4,7 @@ on:
     push:
         branches: [main]
         paths:
+            - ".github/workflows/cd-dev.yml"
             - "infra/**"
             - "apps/**"
 
@@ -130,7 +131,7 @@ jobs:
               with:
                   app-name: ${{ needs.infra-deploy.outputs.CHAT_API_FUNC_NAME }}
                   package: "apps/chat-api"
-                  
+
     chat-web-deploy:
         name: "chat-web: deploy"
         needs:
