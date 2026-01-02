@@ -130,40 +130,42 @@ jobs:
               with:
                   app-name: ${{ needs.infra-deploy.outputs.CHAT_API_FUNC_NAME }}
                   package: "apps/chat-api"
+                  
     chat-web-deploy:
-      name: "chat-web: deploy"
-      needs:
-        - infra-deploy
-      runs-on: ubuntu-latest
-      environment: dev
-      steps:
-        - name: "checkout"
-          uses: actions/checkout@v4
+        name: "chat-web: deploy"
+        needs:
+            - infra-deploy
+        runs-on: ubuntu-latest
+        environment: dev
+        steps:
+            - name: "checkout"
+              uses: actions/checkout@v4
 
-        - name: "login azure"
-          uses: azure/login@v2
-          with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            - name: "login azure"
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-        - name: "get static web app deploy token"
-          id: get_swa_token
-          env:
-            RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
-            CHAT_WEB_STAPP_NAME: ${{ needs.infra-deploy.outputs.CHAT_WEB_STAPP_NAME }}
-          run: |
-            set -euo pipefail
-            TOKEN="$(az staticwebapp secrets list \
-              --name "${CHAT_WEB_STAPP_NAME}" \
-              --resource-group "${RESOURCE_GROUP_NAME}" \
-              --query properties.apiKey \
-              -o tsv)"
-            echo "token=${TOKEN}" >> "$GITHUB_OUTPUT"
+            - name: "get static web app deploy token"
+              id: get_swa_token
+              env:
+                  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
+                  CHAT_WEB_STAPP_NAME: ${{ needs.infra-deploy.outputs.CHAT_WEB_STAPP_NAME }}
+              run: |
+                  set -euo pipefail
+                  TOKEN="$(az staticwebapp secrets list \
+                    --name "${CHAT_WEB_STAPP_NAME}" \
+                    --resource-group "${RESOURCE_GROUP_NAME}" \
+                    --query properties.apiKey \
+                    -o tsv)"
+                  echo "token=${TOKEN}" >> "$GITHUB_OUTPUT"
 
-        - name: "deploy static web app"
-          uses: Azure/static-web-apps-deploy@v1
-          with:
-            azure_static_web_apps_api_token: ${{ steps.get_swa_token.outputs.token }}
-            app_location: "apps/chat-web"
-            output_location: "dist"
+            - name: "deploy static web app"
+              uses: Azure/static-web-apps-deploy@v1
+              with:
+                  azure_static_web_apps_api_token: ${{ steps.get_swa_token.outputs.token }}
+                  action: "upload"
+                  app_location: "apps/chat-web"
+                  output_location: "dist"
