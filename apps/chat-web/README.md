@@ -1,18 +1,24 @@
 # chat-web
-chat-api を呼び出すためのフロントエンドアプリケーション。
+React と Vite で構築されたチャット Web クライアントです。
 
 ## ローカル開発
-- 環境変数を設定する。
-     - `.env.example` をコピーして `.env` を作成する。
-- 依存パッケージをインストールする。
+（`cd apps/chat-web` でサービスディレクトリに移動して作業する。）
+
+- 環境変数の設定
+     - `.env.example` を基に `.env.local` を作成する。
+
+- 依存パッケージのインストール
     ```bash
     npm install
     ```
-- 開発サーバーを起動する。
+
+- 開発サーバーの起動
     ```bash
     npm run dev
     ```
-- リントとフォーマットを実行する。
+    - ブラウザで `http://localhost:5173` にアクセスする。
+
+- リント・フォーマット
     ```bash
     npm run lint
     npm run format
