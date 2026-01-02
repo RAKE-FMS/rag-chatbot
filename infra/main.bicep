@@ -228,3 +228,4 @@ output searchServiceName string = search.name
 output openaiAccountName string = openai.name
 output textEmbedding3SmallDeploymentName string = textEmbedding3Small.name
 output docsStorageAccountName string = docsSt.name
+output chatWebStappName string = chatWeb.name
