@@ -154,7 +154,7 @@ resource chatApiAsp 'Microsoft.Web/serverfarms@2024-11-01' = {
   properties: { reserved: true }
 }
 
-resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
+resource chatApiFunc 'Microsoft.Web/sites@2024-11-01' = {
   name: chatApiFuncName
   location: location
   kind: 'functionapp,linux'
@@ -182,7 +182,7 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
         allowedOrigins: [
           'https://portal.azure.com'
           'http://localhost:5173'
-          'https://${chatWeb.properties.defaultHostname}'
+          'https://${chatWebStapp.properties.defaultHostname}'
         ]
       }
       appSettings: [
@@ -201,7 +201,7 @@ resource chatApi 'Microsoft.Web/sites@2024-11-01' = {
 }
 
 // chat-web
-resource chatWeb 'Microsoft.Web/staticSites@2024-11-01' = {
+resource chatWebStapp 'Microsoft.Web/staticSites@2024-11-01' = {
   name: chatWebName
   location: 'eastasia'
   sku: {
@@ -215,10 +215,10 @@ resource chatWeb 'Microsoft.Web/staticSites@2024-11-01' = {
 }
 
 // ----- outputs -----
-output chatApiFuncName string = chatApi.name
-output searchServiceName string = search.name
-output openaiAccountName string = openai.name
-output textEmbedding3SmallDeploymentName string = textEmbedding3Small.name
-output docsStorageAccountName string = docsSt.name
-output chatWebStappName string = chatWeb.name
-output chatApiDefaultHostName string = chatApi.properties.defaultHostName
+output chatApiFuncName string = chatApiFunc.name
+output searchName string = search.name
+output openaiName string = openai.name
+output textEmbedding3SmallName string = textEmbedding3Small.name
+output docsStName string = docsSt.name
+output chatWebStappName string = chatWebStapp.name
+output chatApiDefaultHostName string = chatApiFunc.properties.defaultHostName

@@ -38,10 +38,10 @@ jobs:
         environment: dev
         outputs:
             CHAT_API_FUNC_NAME: ${{ steps.deploy.outputs.chatApiFuncName }}
-            SEARCH_SERVICE_NAME: ${{ steps.deploy.outputs.searchServiceName }}
-            OPENAI_ACCOUNT_NAME: ${{ steps.deploy.outputs.openaiAccountName }}
-            TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME: ${{ steps.deploy.outputs.textEmbedding3SmallDeploymentName }}
-            DOCS_STORAGE_ACCOUNT_NAME: ${{ steps.deploy.outputs.docsStorageAccountName }}
+            SEARCH_NAME: ${{ steps.deploy.outputs.searchName }}
+            OPENAI_NAME: ${{ steps.deploy.outputs.openaiName }}
+            TEXT_EMBEDDING_3_SMALL_NAME: ${{ steps.deploy.outputs.textEmbedding3SmallName }}
+            DOCS_ST_NAME: ${{ steps.deploy.outputs.docsStName }}
             CHAT_WEB_STAPP_NAME: ${{ steps.deploy.outputs.chatWebStappName }}
             CHAT_API_DEFAULT_HOST_NAME: ${{ steps.deploy.outputs.chatApiDefaultHostName }}
         steps:
@@ -96,25 +96,25 @@ jobs:
             - name: "apply search schemas"
               env:
                   RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
-                  SEARCH_SERVICE_NAME: ${{ needs.infra-deploy.outputs.SEARCH_SERVICE_NAME }}
-                  OPENAI_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.OPENAI_ACCOUNT_NAME }}
-                  TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME: ${{ needs.infra-deploy.outputs.TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME }}
-                  DOCS_STORAGE_ACCOUNT_NAME: ${{ needs.infra-deploy.outputs.DOCS_STORAGE_ACCOUNT_NAME }}
+                  SEARCH_NAME: ${{ needs.infra-deploy.outputs.SEARCH_NAME }}
+                  OPENAI_NAME: ${{ needs.infra-deploy.outputs.OPENAI_NAME }}
+                  TEXT_EMBEDDING_3_SMALL_NAME: ${{ needs.infra-deploy.outputs.TEXT_EMBEDDING_3_SMALL_NAME }}
+                  DOCS_ST_NAME: ${{ needs.infra-deploy.outputs.DOCS_ST_NAME }}
               run: |
                   set -euo pipefail
 
-                  AZURE_SEARCH_SERVICE_ENDPOINT="https://${SEARCH_SERVICE_NAME}.search.windows.net"
-                  AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${RESOURCE_GROUP_NAME}" --service-name "${SEARCH_SERVICE_NAME}" --query primaryKey -o tsv)"
-                  AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query properties.endpoint -o tsv)"
-                  AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_ACCOUNT_NAME}" --query key1 -o tsv)"
-                  DOCS_STORAGE_KEY="$(az storage account keys list -g "${RESOURCE_GROUP_NAME}" -n "${DOCS_STORAGE_ACCOUNT_NAME}" --query '[0].value' -o tsv)"
-                  AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${DOCS_STORAGE_ACCOUNT_NAME};AccountKey=${DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
+                  AZURE_SEARCH_SERVICE_ENDPOINT="https://${SEARCH_NAME}.search.windows.net"
+                  AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${RESOURCE_GROUP_NAME}" --service-name "${SEARCH_NAME}" --query primaryKey -o tsv)"
+                  AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query properties.endpoint -o tsv)"
+                  AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query key1 -o tsv)"
+                  DOCS_STORAGE_KEY="$(az storage account keys list -g "${RESOURCE_GROUP_NAME}" -n "${DOCS_ST_NAME}" --query '[0].value' -o tsv)"
+                  AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${DOCS_ST_NAME};AccountKey=${DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
 
                   export AZURE_SEARCH_SERVICE_ENDPOINT
                   export AZURE_SEARCH_ADMIN_KEY
                   export AZURE_OPENAI_ENDPOINT
                   export AZURE_OPENAI_API_KEY
-                  export AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT="${TEXT_EMBEDDING_3_SMALL_DEPLOYMENT_NAME}"
+                  export AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT="${TEXT_EMBEDDING_3_SMALL_NAME}"
                   export AZURE_DOCS_STORAGE_CONNECTION_STRING
 
                   npm run apply --prefix apps/search
