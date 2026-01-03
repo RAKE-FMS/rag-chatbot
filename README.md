@@ -44,7 +44,7 @@ flowchart LR
 │   │
 │   ├── chat-web/                # chat-web （Azure Static Web Apps による FE）
 │   │
-│   └── search/                  # search （Azure AI Search による 検索エンジン）
+│   └── search/                  # search （Azure AI Search）
 │
 └── infra/                       # 各サービスの IaC
     ├── main.bicep               # Azure リソースの定義
