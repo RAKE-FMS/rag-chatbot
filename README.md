@@ -1,7 +1,7 @@
 # rag-chatbot
 
-Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構築された RAG チャットボットです。
-
+Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構築された RAG チャットボットです。GitHub Actions による CI/CD が含まれています。
+![Demo](images/demo.png)
 
 ## セットアップ
 
