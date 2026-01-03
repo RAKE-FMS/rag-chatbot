@@ -37,13 +37,13 @@ jobs:
         runs-on: ubuntu-latest
         environment: dev
         outputs:
-            CHAT_API_FUNC_NAME: ${{ steps.deploy.outputs.chatApiFuncName }}
-            SEARCH_NAME: ${{ steps.deploy.outputs.searchName }}
-            OPENAI_NAME: ${{ steps.deploy.outputs.openaiName }}
-            TEXT_EMBEDDING_3_SMALL_NAME: ${{ steps.deploy.outputs.textEmbedding3SmallName }}
-            DOCS_ST_NAME: ${{ steps.deploy.outputs.docsStName }}
-            CHAT_WEB_STAPP_NAME: ${{ steps.deploy.outputs.chatWebStappName }}
-            CHAT_API_DEFAULT_HOST_NAME: ${{ steps.deploy.outputs.chatApiDefaultHostName }}
+            AZURE_CHAT_API_FUNC_NAME: ${{ steps.deploy.outputs.chatApiFuncName }}
+            AZURE_SEARCH_NAME: ${{ steps.deploy.outputs.searchName }}
+            AZURE_OPENAI_NAME: ${{ steps.deploy.outputs.openaiName }}
+            AZURE_TEXT_EMBEDDING_3_SMALL_NAME: ${{ steps.deploy.outputs.textEmbedding3SmallName }}
+            AZURE_DOCS_ST_NAME: ${{ steps.deploy.outputs.docsStName }}
+            AZURE_CHAT_WEB_STAPP_NAME: ${{ steps.deploy.outputs.chatWebStappName }}
+            AZURE_CHAT_API_DEFAULT_HOST_NAME: ${{ steps.deploy.outputs.chatApiDefaultHostName }}
         steps:
             - name: "checkout"
               uses: actions/checkout@v4
@@ -96,25 +96,25 @@ jobs:
             - name: "apply search schemas"
               env:
                   AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
-                  SEARCH_NAME: ${{ needs.infra-deploy.outputs.SEARCH_NAME }}
-                  OPENAI_NAME: ${{ needs.infra-deploy.outputs.OPENAI_NAME }}
-                  TEXT_EMBEDDING_3_SMALL_NAME: ${{ needs.infra-deploy.outputs.TEXT_EMBEDDING_3_SMALL_NAME }}
-                  DOCS_ST_NAME: ${{ needs.infra-deploy.outputs.DOCS_ST_NAME }}
+                  AZURE_SEARCH_NAME: ${{ needs.infra-deploy.outputs.AZURE_SEARCH_NAME }}
+                  AZURE_OPENAI_NAME: ${{ needs.infra-deploy.outputs.AZURE_OPENAI_NAME }}
+                  AZURE_TEXT_EMBEDDING_3_SMALL_NAME: ${{ needs.infra-deploy.outputs.AZURE_TEXT_EMBEDDING_3_SMALL_NAME }}
+                  AZURE_DOCS_ST_NAME: ${{ needs.infra-deploy.outputs.AZURE_DOCS_ST_NAME }}
               run: |
                   set -euo pipefail
 
-                  AZURE_SEARCH_SERVICE_ENDPOINT="https://${SEARCH_NAME}.search.windows.net"
-                  AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${AZURE_RESOURCE_GROUP_NAME}" --service-name "${SEARCH_NAME}" --query primaryKey -o tsv)"
-                  AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query properties.endpoint -o tsv)"
-                  AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query key1 -o tsv)"
-                  DOCS_STORAGE_KEY="$(az storage account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${DOCS_ST_NAME}" --query '[0].value' -o tsv)"
-                  AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${DOCS_ST_NAME};AccountKey=${DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
+                  AZURE_SEARCH_SERVICE_ENDPOINT="https://${AZURE_SEARCH_NAME}.search.windows.net"
+                  AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${AZURE_RESOURCE_GROUP_NAME}" --service-name "${AZURE_SEARCH_NAME}" --query primaryKey -o tsv)"
+                  AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${AZURE_OPENAI_NAME}" --query properties.endpoint -o tsv)"
+                  AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${AZURE_OPENAI_NAME}" --query key1 -o tsv)"
+                  AZURE_DOCS_STORAGE_KEY="$(az storage account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${AZURE_DOCS_ST_NAME}" --query '[0].value' -o tsv)"
+                  AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${AZURE_DOCS_ST_NAME};AccountKey=${AZURE_DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
 
                   export AZURE_SEARCH_SERVICE_ENDPOINT
                   export AZURE_SEARCH_ADMIN_KEY
                   export AZURE_OPENAI_ENDPOINT
                   export AZURE_OPENAI_API_KEY
-                  export AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT="${TEXT_EMBEDDING_3_SMALL_NAME}"
+                  export AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT="${AZURE_TEXT_EMBEDDING_3_SMALL_NAME}"
                   export AZURE_DOCS_STORAGE_CONNECTION_STRING
 
                   npm run apply --prefix apps/search
@@ -154,7 +154,7 @@ jobs:
             - name: "deploy function"
               uses: azure/functions-action@v1
               with:
-                  app-name: ${{ needs.infra-deploy.outputs.CHAT_API_FUNC_NAME }}
+                  app-name: ${{ needs.infra-deploy.outputs.AZURE_CHAT_API_FUNC_NAME }}
                   package: "apps/chat-api"
 
     chat-web-deploy:
@@ -180,11 +180,11 @@ jobs:
               id: get_swa_token
               env:
                   AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
-                  CHAT_WEB_STAPP_NAME: ${{ needs.infra-deploy.outputs.CHAT_WEB_STAPP_NAME }}
+                  AZURE_CHAT_WEB_STAPP_NAME: ${{ needs.infra-deploy.outputs.AZURE_CHAT_WEB_STAPP_NAME }}
               run: |
                   set -euo pipefail
                   TOKEN="$(az staticwebapp secrets list \
-                    --name "${CHAT_WEB_STAPP_NAME}" \
+                    --name "${AZURE_CHAT_WEB_STAPP_NAME}" \
                     --resource-group "${AZURE_RESOURCE_GROUP_NAME}" \
                     --query properties.apiKey \
                     -o tsv)"
@@ -193,7 +193,7 @@ jobs:
             - name: "deploy static web app"
               uses: Azure/static-web-apps-deploy@v1
               env:
-                  VITE_API_BASE_URL: "https://${{ needs.infra-deploy.outputs.CHAT_API_DEFAULT_HOST_NAME }}/api"
+                  VITE_API_BASE_URL: "https://${{ needs.infra-deploy.outputs.AZURE_CHAT_API_DEFAULT_HOST_NAME }}/api"
               with:
                   azure_static_web_apps_api_token: ${{ steps.get_swa_token.outputs.token }}
                   action: "upload"
