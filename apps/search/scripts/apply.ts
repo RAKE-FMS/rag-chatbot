@@ -281,14 +281,14 @@ async function main(): Promise<void> {
     const indexersDir = path.join(schemasDir, "indexers");
 
     const replacer = new Replacer({
-        __AOAI_ENDPOINT__: trimTrailingSlash(
+        __AZURE_OPENAI_ENDPOINT__: trimTrailingSlash(
             requireEnv("AZURE_OPENAI_ENDPOINT")
         ),
-        __AOAI_KEY__: requireEnv("AZURE_OPENAI_API_KEY"),
-        __AOAI_EMBEDDING_DEPLOYMENT__: requireEnv(
+        __AZURE_OPENAI_API_KEY__: requireEnv("AZURE_OPENAI_API_KEY"),
+        __AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_NAME__: requireEnv(
             "AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_NAME"
         ),
-        __DOCS_STORAGE_CONNECTION_STRING__: requireEnv(
+        __AZURE_DOCS_STORAGE_CONNECTION_STRING__: requireEnv(
             "AZURE_DOCS_STORAGE_CONNECTION_STRING"
         ),
     });

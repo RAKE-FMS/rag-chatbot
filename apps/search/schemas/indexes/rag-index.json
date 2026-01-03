@@ -43,9 +43,7 @@
         }
     ],
     "corsOptions": {
-        "allowedOrigins": [
-            "*"
-        ],
+        "allowedOrigins": ["*"],
         "maxAgeInSeconds": 300
     },
     "vectorSearch": {
@@ -73,9 +71,9 @@
                 "name": "openai-vectorizer",
                 "kind": "azureOpenAI",
                 "azureOpenAIParameters": {
-                    "resourceUri": "__AOAI_ENDPOINT__",
-                    "deploymentId": "__AOAI_EMBEDDING_DEPLOYMENT__",
-                    "apiKey": "__AOAI_KEY__",
+                    "resourceUri": "__AZURE_OPENAI_ENDPOINT__",
+                    "deploymentId": "__AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_NAME__",
+                    "apiKey": "__AZURE_OPENAI_API_KEY__",
                     "modelName": "text-embedding-3-small"
                 }
             }
