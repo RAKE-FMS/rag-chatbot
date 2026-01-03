@@ -270,7 +270,7 @@ async function applyIndexers(
 }
 
 async function main(): Promise<void> {
-    const searchEndpoint = requireEnv("AZURE_SEARCH_SERVICE_ENDPOINT");
+    const searchEndpoint = requireEnv("AZURE_SEARCH_ENDPOINT");
     const searchAdminKey = requireEnv("AZURE_SEARCH_ADMIN_KEY");
     const apiVersion = "2025-09-01";
 
@@ -286,7 +286,7 @@ async function main(): Promise<void> {
         ),
         __AOAI_KEY__: requireEnv("AZURE_OPENAI_API_KEY"),
         __AOAI_EMBEDDING_DEPLOYMENT__: requireEnv(
-            "AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT"
+            "AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_NAME"
         ),
         __DOCS_STORAGE_CONNECTION_STRING__: requireEnv(
             "AZURE_DOCS_STORAGE_CONNECTION_STRING"

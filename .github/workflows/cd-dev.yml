@@ -103,18 +103,18 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  AZURE_SEARCH_SERVICE_ENDPOINT="https://${AZURE_SEARCH_NAME}.search.windows.net"
+                  AZURE_SEARCH_ENDPOINT="https://${AZURE_SEARCH_NAME}.search.windows.net"
                   AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${AZURE_RESOURCE_GROUP_NAME}" --service-name "${AZURE_SEARCH_NAME}" --query primaryKey -o tsv)"
                   AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${AZURE_OPENAI_NAME}" --query properties.endpoint -o tsv)"
                   AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${AZURE_OPENAI_NAME}" --query key1 -o tsv)"
                   AZURE_DOCS_STORAGE_KEY="$(az storage account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${AZURE_DOCS_ST_NAME}" --query '[0].value' -o tsv)"
                   AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${AZURE_DOCS_ST_NAME};AccountKey=${AZURE_DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
 
-                  export AZURE_SEARCH_SERVICE_ENDPOINT
+                  export AZURE_SEARCH_ENDPOINT
                   export AZURE_SEARCH_ADMIN_KEY
                   export AZURE_OPENAI_ENDPOINT
                   export AZURE_OPENAI_API_KEY
-                  export AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT="${AZURE_TEXT_EMBEDDING_3_SMALL_NAME}"
+                  export AZURE_OPENAI_TEXT_EMBEDDING_3_SMALL_NAME="${AZURE_TEXT_EMBEDDING_3_SMALL_NAME}"
                   export AZURE_DOCS_STORAGE_CONNECTION_STRING
 
                   npm run apply --prefix apps/search
