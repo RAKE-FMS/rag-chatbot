@@ -59,7 +59,7 @@ jobs:
               id: deploy
               uses: azure/arm-deploy@v2
               with:
-                  resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
+                  resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
                   template: infra/main.bicep
                   parameters: infra/params/dev.bicepparam
 
@@ -95,7 +95,7 @@ jobs:
 
             - name: "apply search schemas"
               env:
-                  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
+                  AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
                   SEARCH_NAME: ${{ needs.infra-deploy.outputs.SEARCH_NAME }}
                   OPENAI_NAME: ${{ needs.infra-deploy.outputs.OPENAI_NAME }}
                   TEXT_EMBEDDING_3_SMALL_NAME: ${{ needs.infra-deploy.outputs.TEXT_EMBEDDING_3_SMALL_NAME }}
@@ -104,10 +104,10 @@ jobs:
                   set -euo pipefail
 
                   AZURE_SEARCH_SERVICE_ENDPOINT="https://${SEARCH_NAME}.search.windows.net"
-                  AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${RESOURCE_GROUP_NAME}" --service-name "${SEARCH_NAME}" --query primaryKey -o tsv)"
-                  AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query properties.endpoint -o tsv)"
-                  AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query key1 -o tsv)"
-                  DOCS_STORAGE_KEY="$(az storage account keys list -g "${RESOURCE_GROUP_NAME}" -n "${DOCS_ST_NAME}" --query '[0].value' -o tsv)"
+                  AZURE_SEARCH_ADMIN_KEY="$(az search admin-key show -g "${AZURE_RESOURCE_GROUP_NAME}" --service-name "${SEARCH_NAME}" --query primaryKey -o tsv)"
+                  AZURE_OPENAI_ENDPOINT="$(az cognitiveservices account show -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query properties.endpoint -o tsv)"
+                  AZURE_OPENAI_API_KEY="$(az cognitiveservices account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${OPENAI_NAME}" --query key1 -o tsv)"
+                  DOCS_STORAGE_KEY="$(az storage account keys list -g "${AZURE_RESOURCE_GROUP_NAME}" -n "${DOCS_ST_NAME}" --query '[0].value' -o tsv)"
                   AZURE_DOCS_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${DOCS_ST_NAME};AccountKey=${DOCS_STORAGE_KEY};EndpointSuffix=core.windows.net"
 
                   export AZURE_SEARCH_SERVICE_ENDPOINT
@@ -179,13 +179,13 @@ jobs:
             - name: "get static web app deploy token"
               id: get_swa_token
               env:
-                  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
+                  AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
                   CHAT_WEB_STAPP_NAME: ${{ needs.infra-deploy.outputs.CHAT_WEB_STAPP_NAME }}
               run: |
                   set -euo pipefail
                   TOKEN="$(az staticwebapp secrets list \
                     --name "${CHAT_WEB_STAPP_NAME}" \
-                    --resource-group "${RESOURCE_GROUP_NAME}" \
+                    --resource-group "${AZURE_RESOURCE_GROUP_NAME}" \
                     --query properties.apiKey \
                     -o tsv)"
                   echo "token=${TOKEN}" >> "$GITHUB_OUTPUT"
