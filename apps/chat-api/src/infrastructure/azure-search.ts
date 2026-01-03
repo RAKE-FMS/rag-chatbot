@@ -23,7 +23,7 @@ export function getSearchClient(): SearchClient<Index> {
     }
 
     searchClient = new SearchClient<Index>(
-        env.AZURE_SEARCH_SERVICE_ENDPOINT,
+        env.AZURE_SEARCH_ENDPOINT,
         INDEX_NAME,
         new AzureKeyCredential(env.AZURE_SEARCH_ADMIN_KEY)
     );
