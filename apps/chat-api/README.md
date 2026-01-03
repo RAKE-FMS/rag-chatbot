@@ -8,7 +8,7 @@ Azure OpenAI と Azure AI Search を利用して、チャットボットの応�
 （`cd apps/chat-api` でサービスディレクトリに移動して作業する。）
 
 - 環境変数の設定
-     - `local.settings.example.json` を基に `local.settings.json` を作成する。
+    - `local.settings.example.json` を基に `local.settings.json` を作成する。
         - 各変数は Azure ポータルから取得できる。
 
 - 必要ツールのインストール
@@ -28,6 +28,7 @@ Azure OpenAI と Azure AI Search を利用して、チャットボットの応�
         ```
 
 - 依存パッケージのインストール
+
     ```bash
     npm install
     ```
@@ -43,9 +44,11 @@ Azure OpenAI と Azure AI Search を利用して、チャットボットの応�
         ```
 
 - 動作確認
+
     ```bash
     curl http://localhost:7071/api/health
     ```
+
     ```bash
     curl -X POST "http://localhost:7071/api/answer" \
      -H "Content-Type: application/json" \

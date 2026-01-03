@@ -3,6 +3,60 @@
 Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構築された RAG チャットボットです。GitHub Actions による CI/CD が含まれています。
 ![Demo](images/demo.png)
 
+## システム構成
+
+```mermaid
+flowchart LR
+    chat-api["Azure Functions (chat-api)"]
+    chat-web["Azure Static Web Apps (chat-web)"]
+    openai["Azure OpenAI"]
+
+    subgraph search["Azure AI Search (search)"]
+        index["Index"]
+        indexer["Indexer"]
+        datasource["Data Source"]
+        skillset["Skillset"]
+        
+        indexer --> index
+        indexer --> datasource
+        indexer --> skillset
+    end
+
+    index -->|vectorize| openai
+    skillset -->|embed| openai
+
+    chat-web -->|http| chat-api
+    chat-api -->|generate| openai
+    chat-api -->|retrieve| index
+```
+
+## ディレクトリ構成
+
+```
+.
+├── .github
+│   └── workflows/               # GitHub Actions ワークフロー
+│       ├── ci.yml               # CI（リント・フォーマット）
+│       └── cd-dev.yml           # CD（dev 環境へのデプロイ）
+│
+├── apps/                        # 各サービスのアプリケーションコード
+│   ├── chat-api/                # chat-api （Azure Functions による API）
+│   │
+│   ├── chat-web/                # chat-web （Azure Static Web Apps による FE）
+│   │
+│   └── search/                  # search （Azure AI Search による 検索エンジン）
+│
+└── infra/                       # 各サービスの IaC
+    ├── main.bicep               # Azure リソースの定義
+    └── params/                  # 環境別パラメータ
+```
+各サービス・インフラの詳細は `apps/`、`infra/` 以下の README.md を参照してください。
+
+## CI/CD
+
+- CI: `main` ブランチへのPR作成時にリント・フォーマットのチェックが実行されます。
+- CD: `main` ブランチへのマージ時に `dev` 環境へのデプロイされます。
+
 ## セットアップ
 
 ### CDのセットアップ
@@ -10,7 +64,7 @@ Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構�
 #### Azure側
 
 1. Azure CLI にログイン
-    - 認証済みでない場合は Azure CLI にログインする
+    - 認証済みでない場合は Azure CLI にログインする。
     
     ```bash
     az login
@@ -18,7 +72,7 @@ Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構�
     
 1. 必要情報の取得
     - アカウント情報を取得
-    - 出力から `tenantId` と `subscriptionId` をメモする
+    - 出力から `tenantId` と `subscriptionId` をメモする。
     
     ```bash
     az account show --query "{tenantId:tenantId, subscriptionId:id}"
@@ -26,8 +80,8 @@ Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構�
     
 1. リソースグループの作成
     - リソースグループを作成
-    - 補足：`<resourceGroupName>` は `rg-yosh-rcb-dev-jpe` のように命名する
-    - `resourceGroupName` をメモする
+    - 補足：`<resourceGroupName>` は `rg-yosh-rcb-dev-jpe` のように命名する。
+    - `resourceGroupName` をメモする。
     
     ```bash
     az group create --name <resourceGroupName> --location japaneast
@@ -35,8 +89,8 @@ Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構�
     
 1. アプリの作成
     - アプリを作成
-    - 補足：`<displayName>` は `gh-actions-yosh-rcb-dev-jpe` のように命名する
-    - 出力から `appId` をメモする
+    - 補足：`<displayName>` は `gh-actions-yosh-rcb-dev-jpe` のように命名する。
+    - 出力から `appId` をメモする。
     
     ```bash
     az ad app create --display-name "<displayName>"
@@ -58,7 +112,7 @@ Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構�
     ```
     
 1. OIDCの設定
-    - `repo:<GitHubUser>/<RepoName>:environment:dev` はデプロイを行う GitHub リポジトリの Environments を指定する
+    - `repo:<GitHubUser>/<RepoName>:environment:dev` はデプロイを行う GitHub リポジトリの Environments を指定する。
     
     ```bash
     az ad app federated-credential create --id <appId> --parameters '{
@@ -89,7 +143,7 @@ Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構�
         ```
         
 
-## ブランチ保護ルールのセットアップ
+### ブランチ保護ルールのセットアップ
 
 1. デフォルトブランチを `main` に設定
     - Settings → General → Default branch
@@ -105,5 +159,5 @@ Azure Static Web Apps + Azure Functions + Azure OpenAI + Azure AI Search で構�
                 - Allowed merge methods で Squash のみを設定
             - Require status checks to pass
                 - Add checks で `ci: status check` を追加
-                    - 見つからない場合、設定せずに作成し、CIが実行されてから設定し直す
+                    - 見つからない場合、設定せずに作成し、CIが実行されてから設定し直す。
             - Block force pushed
