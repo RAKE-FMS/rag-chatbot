@@ -1,0 +1,87 @@
+import type { Message } from '../domain/message';
+import ReactMarkdown from 'react-markdown';
+import '../markdown.css';
+
+type ChatViewProps = {
+    messages: Message[];
+    selectedMessageId: string | null;
+    onSelectMessage: (id: string) => void;
+};
+
+export function ChatView({ messages, selectedMessageId, onSelectMessage }: ChatViewProps) {
+    return (
+        <div className="h-full overflow-auto">
+            <ul className="space-y-4 p-4">
+                {messages.map((message) => {
+                    const shouldSetSelect = message.type === 'assistant';
+                    return (
+                        <Message
+                            key={message.id}
+                            message={message}
+                            isSelected={message.id === selectedMessageId}
+                            setAsSelected={
+                                shouldSetSelect ? () => onSelectMessage(message.id) : () => {}
+                            }
+                        />
+                    );
+                })}
+            </ul>
+        </div>
+    );
+}
+
+function Message({
+    message,
+    isSelected,
+    setAsSelected,
+}: {
+    message: Message;
+    isSelected: boolean;
+    setAsSelected: () => void;
+}) {
+    return (
+        <div className="mx-auto w-full max-w-4xl">
+            {message.type === 'user' ? (
+                <UserMessage message={message} />
+            ) : message.type === 'assistant' ? (
+                <AssistantMessage
+                    message={message}
+                    isSelected={isSelected}
+                    setAsSelected={setAsSelected}
+                />
+            ) : null}
+        </div>
+    );
+}
+
+function UserMessage({ message }: { message: Message }) {
+    return (
+        <div className="flex justify-end">
+            <div className="bg-bg-muted px-4 py-2 rounded-[20px] max-w-[70%] whitespace-pre-wrap wrap-break-word">
+                {message.content}
+            </div>
+        </div>
+    );
+}
+
+function AssistantMessage({
+    message,
+    isSelected,
+    setAsSelected,
+}: {
+    message: Message;
+    isSelected: boolean;
+    setAsSelected: () => void;
+}) {
+    return (
+        <div
+            className={`p-4 mb-4 rounded-[20px] w-full text-left
+            ${isSelected ? 'border-2 border-border-muted' : 'border-2 border-transparent'}`}
+            onClick={setAsSelected}
+        >
+            <div className="prose markdown-content wrap-break-word">
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+            </div>
+        </div>
+    );
+}
