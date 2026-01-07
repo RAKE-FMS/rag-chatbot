@@ -42,14 +42,14 @@ flowchart LR
 │       ├── ci.yml               # CI（リント・フォーマット）
 │       └── cd-dev.yml           # CD（dev 環境へのデプロイ）
 │
-├── apps/                        # 各リソースのアプリケーションコード
+├── apps/                        # 各サービスのアプリケーションコード
 │   ├── chat-api/                # chat-api （Azure Functions による API）
 │   │
 │   ├── chat-web/                # chat-web （Azure Static Web Apps による FE）
 │   │
 │   └── search/                  # search （Azure AI Search）
 │
-└── infra/                       # 各リソースの IaC
+└── infra/                       # 各サービスの IaC
     ├── main.bicep               # Azure リソースの定義
     └── params/                  # 環境別パラメータ
 ```
