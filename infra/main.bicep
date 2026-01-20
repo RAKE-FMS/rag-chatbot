@@ -1,4 +1,4 @@
-// yosh→rake
+// yosh→rakeに変更
 
 @description('Organization name')
 param organizationName string = 'rake'
