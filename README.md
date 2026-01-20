@@ -62,6 +62,35 @@ flowchart LR
 
 ## セットアップ
 
+### Prerequisites
+
+Azure サブスクリプションで以下の Resource Provider を事前に登録する必要があります：
+
+- `Microsoft.Search`（Azure AI Search）
+- `Microsoft.CognitiveServices`（Azure OpenAI）
+
+これらが未登録の場合、Bicep デプロイ時に `MissingSubscriptionRegistration` エラーが発生します。
+
+**登録コマンド：**
+
+```bash
+az provider register --namespace Microsoft.Search
+az provider register --namespace Microsoft.CognitiveServices
+```
+
+**登録確認：**
+
+```bash
+az provider show --namespace Microsoft.Search --query "registrationState"
+az provider show --namespace Microsoft.CognitiveServices --query "registrationState"
+```
+
+出力が `"Registered"` になれば OK です。登録完了まで数十秒〜数分かかることがあります。
+
+> [!NOTE]
+> Resource Provider の登録には **Subscription Owner 権限**が必要です。
+> CI/CD 用の Service Principal には通常この権限を付与しないため、**初回のみ人間が実行**してください。
+
 ### CDのセットアップ
 
 #### Azure側
