@@ -1,7 +1,7 @@
 // yosh→rakeに変更した
 
 @description('Organization name')
-param organizationName string = 'yosh'
+param organizationName string = 'rake'
 
 @description('Project name')
 param projectName string = 'rcb'
