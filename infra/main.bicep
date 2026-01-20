@@ -1,3 +1,5 @@
+// yosh→rake
+
 @description('Organization name')
 param organizationName string = 'rake'
 
