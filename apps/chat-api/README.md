@@ -1,5 +1,7 @@
 # chat-api
 
+更新テスト
+
 Azure Functions で構築されたチャット API サービスです。
 Azure OpenAI と Azure AI Search を利用して、チャットボットの応答を生成します。
 
